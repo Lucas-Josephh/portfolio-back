@@ -13,7 +13,7 @@ const TABLES = {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: false } : false
+  ssl: { rejectUnauthorized: false }
 });
 
 app.use(cors({
@@ -25,6 +25,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type']
 }));
+
 app.use(express.json());
 
 const normalizeTechnologies = (tech) => {
@@ -46,11 +47,12 @@ const getTableMeta = (tableName) => {
 
 app.get('/health', async (_req, res) => {
   try {
-    await pool.query('SELECT 1');
+    const result = await pool.query('SELECT 1');
+    console.log('DB response:', result.rows);
     res.json({ status: 'ok', date: new Date().toISOString() });
   } catch (err) {
     console.error('Healthcheck failed', err);
-    res.status(500).json({ error: 'DB unreachable' });
+    res.status(500).json({ error: 'DB unreachable', details: err.message });
   }
 });
 
@@ -88,7 +90,7 @@ app.post('/addData', async (req, res) => {
       const technologies = normalizeTechnologies(data.technologie);
       const url = (data.url ?? '').toString().trim();
       const result = await pool.query(
-        `INSERT INTO project (title, status, description, url, technologie, demo, github)
+        `INSERT INTO project (title,status,description,url,technologie,demo,github)
          VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
         [data.title, data.status, data.description, url, technologies, data.demo || '', data.github || '']
       );
@@ -97,8 +99,7 @@ app.post('/addData', async (req, res) => {
 
     if (tableName === 'skill') {
       const result = await pool.query(
-        `INSERT INTO skill (name, categorie, level)
-         VALUES ($1,$2,$3) RETURNING *`,
+        `INSERT INTO skill (name,categorie,level) VALUES ($1,$2,$3) RETURNING *`,
         [data.name, data.categorie, clampPercent(data.level)]
       );
       return res.status(201).json(result.rows[0]);
@@ -128,7 +129,7 @@ app.put('/updateData', async (req, res) => {
       const result = await pool.query(
         `UPDATE project SET title=$1,status=$2,description=$3,url=$4,technologie=$5,demo=$6,github=$7
          WHERE ${meta.idKey}=$8 RETURNING *`,
-        [data.title, data.status, data.description, url, technologies, data.demo || '', data.github || '', Number(id)]
+        [data.title,data.status,data.description,url,technologies,data.demo||'',data.github||'',Number(id)]
       );
       if (result.rowCount === 0) return res.status(404).json({ error: 'Entrée introuvable.' });
       return res.json(result.rows[0]);
@@ -137,7 +138,7 @@ app.put('/updateData', async (req, res) => {
     if (tableName === 'skill') {
       const result = await pool.query(
         `UPDATE skill SET name=$1,categorie=$2,level=$3 WHERE ${meta.idKey}=$4 RETURNING *`,
-        [data.name, data.categorie, clampPercent(data.level), Number(id)]
+        [data.name,data.categorie,clampPercent(data.level),Number(id)]
       );
       if (result.rowCount === 0) return res.status(404).json({ error: 'Entrée introuvable.' });
       return res.json(result.rows[0]);
