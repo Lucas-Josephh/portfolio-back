@@ -12,11 +12,15 @@ const TABLES = {
 };
 
 const pool = new Pool({
-  connectionString: 'postgresql://postgres:epitech4783@db.hqdsxabixeazmdnprbuf.supabase.co:5432/postgres',
-  ssl: { rejectUnauthorized: false }
-});
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:epitech4783@db.hqdsxabixeazmdnprbuf.supabase.co:5432/postgres',
+  ssl: {
+    rejectUnauthorized: false
+  },
 
-pool.query('SELECT 1').then(res => console.log(res.rows)).catch(err => console.error(err));
+  max: 1,
+  idleTimeoutMillis: 0,
+  connectionTimeoutMillis: 0
+});
 
 app.use(cors({
   origin: [
@@ -46,6 +50,13 @@ const getTableMeta = (tableName) => {
   if (!tableName || !(tableName in TABLES)) return { error: 'Table inconnue. Utiliser project ou skill.' };
   return { meta: TABLES[tableName] };
 };
+
+app.get('/', (_req, res) => {
+  res.json({ 
+    message: 'Portfolio API', 
+    endpoints: ['/health', '/getData', '/addData', '/updateData', '/deleteData']
+  });
+});
 
 app.get('/health', async (_req, res) => {
   try {
