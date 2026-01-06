@@ -11,16 +11,24 @@ const TABLES = {
   skill: { idKey: 'id_skill' }
 };
 
+// Configuration Pool optimisée pour Vercel (serverless)
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:epitech4783@db.hqdsxabixeazmdnprbuf.supabase.co:5432/postgres',
+  host: process.env.PGHOST || 'db.hqdsxabixeazmdnprbuf.supabase.co',
+  port: process.env.PGPORT || 6543, // Port de pooling Supabase
+  database: process.env.PGDATABASE || 'postgres',
+  user: process.env.PGUSER || 'postgres',
+  password: process.env.PGPASSWORD || 'epitech4783',
   ssl: {
     rejectUnauthorized: false
   },
-
+  // Configuration serverless
   max: 1,
-  idleTimeoutMillis: 0,
-  connectionTimeoutMillis: 0
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 0
 });
+
+// SUPPRIMÉ : la connexion au démarrage ne fonctionne pas en serverless
+// pool.query('SELECT 1').then(res => console.log(res.rows)).catch(err => console.error(err));
 
 app.use(cors({
   origin: [
@@ -51,10 +59,18 @@ const getTableMeta = (tableName) => {
   return { meta: TABLES[tableName] };
 };
 
+// Route racine
 app.get('/', (_req, res) => {
   res.json({ 
     message: 'Portfolio API', 
-    endpoints: ['/health', '/getData', '/addData', '/updateData', '/deleteData']
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      getData: '/getData?table=project|skill&id=optional',
+      addData: 'POST /addData',
+      updateData: 'PUT /updateData',
+      deleteData: 'DELETE /deleteData'
+    }
   });
 });
 
@@ -62,10 +78,17 @@ app.get('/health', async (_req, res) => {
   try {
     const result = await pool.query('SELECT 1');
     console.log('DB response:', result.rows);
-    res.json({ status: 'ok', date: new Date().toISOString() });
+    res.json({ 
+      status: 'ok', 
+      database: 'connected',
+      date: new Date().toISOString() 
+    });
   } catch (err) {
     console.error('Healthcheck failed', err);
-    res.status(500).json({ error: 'DB unreachable', details: err.message });
+    res.status(500).json({ 
+      error: 'DB unreachable', 
+      details: err.message 
+    });
   }
 });
 
@@ -188,6 +211,7 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Erreur serveur' });
 });
 
+// Ne lance le serveur qu'en développement local
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => console.log(`API portfolio locale sur http://localhost:${PORT}`));
 }
