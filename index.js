@@ -11,7 +11,6 @@ const TABLES = {
   skill: { idKey: 'id_skill' }
 };
 
-// Configuration Pool optimisée pour Vercel (serverless)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
@@ -20,16 +19,13 @@ const pool = new Pool({
   idleTimeoutMillis: 0
 });
 
-// SUPPRIMÉ : la connexion au démarrage ne fonctionne pas en serverless
-// pool.query('SELECT 1').then(res => console.log(res.rows)).catch(err => console.error(err));
-
 app.use(cors({
   origin: [
     'http://localhost:4200',
     'http://localhost:3000',
-    'https://Lucas-Josephh.github.io'
+    'https://lucas-josephh.github.io'
   ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET','POST','PUT','DELETE'],
   allowedHeaders: ['Content-Type']
 }));
 
@@ -52,7 +48,6 @@ const getTableMeta = (tableName) => {
   return { meta: TABLES[tableName] };
 };
 
-// Route racine
 app.get('/', (_req, res) => {
   res.json({ 
     message: 'Portfolio API', 
@@ -204,7 +199,6 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Erreur serveur' });
 });
 
-// Ne lance le serveur qu'en développement local
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => console.log(`API portfolio locale sur http://localhost:${PORT}`));
 }
