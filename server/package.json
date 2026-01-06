@@ -1,0 +1,15 @@
+{
+  "name": "portfolio-api",
+  "version": "1.0.0",
+  "description": "API Node.js pour le portfolio Angular (project & skill CRUD)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.19.2",
+    "pg": "^8.11.5"
+  }
+}
