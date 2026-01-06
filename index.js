@@ -12,9 +12,11 @@ const TABLES = {
 };
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: 'postgresql://postgres:epitech4783@db.hqdsxabixeazmdnprbuf.supabase.co:5432/postgres',
   ssl: { rejectUnauthorized: false }
 });
+
+pool.query('SELECT 1').then(res => console.log(res.rows)).catch(err => console.error(err));
 
 app.use(cors({
   origin: [
