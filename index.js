@@ -13,15 +13,10 @@ const TABLES = {
 
 // Configuration Pool optimisée pour Vercel (serverless)
 const pool = new Pool({
-  host: process.env.PGHOST || 'db.hqdsxabixeazmdnprbuf.supabase.co',
-  port: process.env.PGPORT || 6543, // Port de pooling Supabase
-  database: process.env.PGDATABASE || 'postgres',
-  user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || 'epitech4783',
+  connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false
   },
-  // Configuration serverless
   max: 1,
   connectionTimeoutMillis: 10000,
   idleTimeoutMillis: 0
