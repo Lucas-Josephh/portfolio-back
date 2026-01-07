@@ -137,14 +137,13 @@ async function checkPassword(password, hash) {
     return isMatch;
 }
 
-app.get('/passExist', async (req, res) => {
+app.get('/passExist', async (_req, res) => {
   try {
-    const result = await pool.query('SELECT 1 FROM pass LIMIT 1');
-
-    res.json(result.rows.length > 0);
+    const result = await pool.query('SELECT 1 FROM password LIMIT 1');
+    res.status(200).json({ exists: result.rows.length > 0 });
   } catch (error) {
     console.error('passExist error:', error);
-    res.status(500).json(false);
+    res.status(500).json({ exists: false });
   }
 });
 
