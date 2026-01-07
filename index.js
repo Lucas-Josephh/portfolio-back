@@ -106,20 +106,20 @@ app.get('/getData', async (req, res) => {
 
 app.post('/hash', async (req, res) => {
   try {
-    const { data } = req.body;
+    const { password } = req.body;
 
-    if (!data.newmdp) {
-      return res.status(400).json({exists: false});
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ exists: false });
     }
 
-    const hash = await bcrypt.hash(data.password, 10);
+    const hash = await bcrypt.hash(password, 10);
 
-    await pool.query('INSERT INTO password (pass) VALUES ($1)', [hash]);
+    await pool.query('INSERT INTO passwords (pass) VALUES ($1)', [hash]);
 
-    res.status(200).json({exists: true});
+    res.status(200).json({ exists: true });
   } catch (error) {
     console.error('hash error:', error);
-    res.status(500).json({exists: false});
+    res.status(500).json({ exists: false });
   }
 });
 
