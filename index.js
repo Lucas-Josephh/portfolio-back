@@ -112,7 +112,7 @@ app.post('/hash', async (req, res) => {
       return res.status(400).json({ exists: false });
     }
 
-    const hash = await bcrypt.hash(password, 10);
+    const hash = hashPassword(password);
 
     await pool.query('INSERT INTO passwords (pass) VALUES ($1)', [hash]);
 
