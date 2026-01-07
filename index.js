@@ -108,9 +108,16 @@ app.get('/hash', async (req, res) => {
 
   const { data } = req.body;
 
+  try {
   hashPassword(data.password)
-      .then(async hash => await pool.query(`INSERT INTO password (pass) VALUES ($1) RETURNING *`, [hash]))
-      .catch(err => console.error(err));
+    .then(async hash => {
+      await pool.query(`INSERT INTO password (pass) VALUES ($1) RETURNING *`, [hash]);
+      res.status(500).json({ exists: true });
+    })
+  } catch (error) {
+    console.error('hashpass error:', error);
+    res.status(500).json({ exists: false });
+  }
 });
 
 async function hashPassword(password) {
