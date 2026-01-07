@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const bcrypt = require('bcrypt');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -102,6 +103,55 @@ app.get('/getData', async (req, res) => {
     res.status(500).json({ error: 'Erreur lors de la récupération des données.' });
   }
 });
+
+app.get('/hash', async (req, res) => {
+
+  const { data } = req.body;
+
+  hashPassword(data.password)
+      .then(async hash => await pool.query(`INSERT INTO password (pass) VALUES ($1) RETURNING *`, [hash]))
+      .catch(err => console.error(err));
+});
+
+async function hashPassword(password) {
+    const saltRounds = 10;
+    const hash = await bcrypt.hash(password, saltRounds);
+    return hash;
+}
+
+app.get('/checkpass', async (req, res) => {
+
+  const { data } = req.body;
+
+  const isValid = await checkPassword(data.password, hashEnBase);
+
+  if (isValid) {
+    console.log("Connexion réussie");
+  } else {
+    console.log("Mot de passe incorrect");
+  }
+});
+
+async function checkPassword(password, hash) {
+    const isMatch = await bcrypt.compare(password, hash);
+    return isMatch;
+}
+
+app.get('/passExist', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT 1 FROM pass LIMIT 1');
+
+    res.json(rows.length > 0);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json(false);
+  }
+});
+
+async function checkPassword(password, hash) {
+    const isMatch = await bcrypt.compare(password, hash);
+    return isMatch;
+}
 
 app.post('/addData', async (req, res) => {
   const { table: tableName, data } = req.body || {};
