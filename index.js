@@ -139,8 +139,9 @@ async function checkPassword(password, hash) {
 
 app.get('/passExist', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT 1 FROM pass LIMIT 1');
+    const result = await pool.query('SELECT 1 FROM pass LIMIT 1');
 
+    const rows = result[0];
     res.json(rows.length > 0);
   } catch (error) {
     console.error(error);
