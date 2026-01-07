@@ -104,19 +104,22 @@ app.get('/getData', async (req, res) => {
   }
 });
 
-app.get('/hash', async (req, res) => {
-
-  const { data } = req.body;
-
+app.post('/hash', async (req, res) => {
   try {
-  hashPassword(data.password)
-    .then(async hash => {
-      await pool.query(`INSERT INTO password (pass) VALUES ($1) RETURNING *`, [hash]);
-      res.status(500).json({ exists: true });
-    })
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json(false);
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+
+    await pool.query('INSERT INTO password (pass) VALUES ($1)', [hash]);
+
+    res.status(200).json(true);
   } catch (error) {
-    console.error('hashpass error:', error);
-    res.status(500).json({ exists: false });
+    console.error('hash error:', error);
+    res.status(500).json(false);
   }
 });
 
