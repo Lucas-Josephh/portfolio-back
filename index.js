@@ -119,16 +119,15 @@ async function hashPassword(password) {
     return hash;
 }
 
-app.get('/checkpass', async (req, res) => {
-
+app.post('/checkpass', async (req, res) => {
   const { data } = req.body;
 
-  const isValid = await checkPassword(data.password, hashEnBase);
-
-  if (isValid) {
-    console.log("Connexion réussie");
-  } else {
-    console.log("Mot de passe incorrect");
+  try {
+    const result = await checkPassword(data.password, hashEnBase);
+    res.status(200).json({ exists: result });
+  } catch (error) {
+    console.error('passExist error:', error);
+    res.status(500).json({ exists: false });
   }
 });
 
@@ -174,6 +173,14 @@ app.post('/addData', async (req, res) => {
       const result = await pool.query(
         `INSERT INTO skill (name,categorie,level) VALUES ($1,$2,$3) RETURNING *`,
         [data.name, data.categorie, clampPercent(data.level)]
+      );
+      return res.status(201).json(result.rows[0]);
+    }
+
+    if (tableName === 'password') {
+      const result = await pool.query(
+        `INSERT INTO password (pass) VALUES ($1) RETURNING *`,
+        [data.newmdp]
       );
       return res.status(201).json(result.rows[0]);
     }
