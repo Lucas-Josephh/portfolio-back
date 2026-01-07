@@ -3,7 +3,6 @@
 [![Node.js](https://img.shields.io/badge/Node.js-green?style=flat-square)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express.js-black?style=flat-square)](https://expressjs.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue?style=flat-square)](https://www.postgresql.org/)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
 ---
 
