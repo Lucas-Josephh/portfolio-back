@@ -112,7 +112,7 @@ app.post('/hash', async (req, res) => {
       return res.status(400).json({ exists: false });
     }
 
-    const hash = hashPassword(password);
+    const hash = await hashPassword(password);
 
     await pool.query('INSERT INTO passwords (pass) VALUES ($1)', [hash]);
 
@@ -130,36 +130,36 @@ async function hashPassword(password) {
 }
 
 app.post('/checkpass', async (req, res) => {
-  const { data } = req.body;
+  const { password } = req.body;
+
+  if (!password || typeof password !== 'string') {
+    return res.status(400).json({ exists: false });
+  }
 
   try {
-    const result = await checkPassword(data.password, hashEnBase);
-    res.status(200).json({ exists: result });
+    const result = await pool.query('SELECT pass FROM passwords LIMIT 1');
+    if (result.rows.length === 0) {
+      return res.status(200).json({ exists: false });
+    }
+    
+    const hashFromDb = result.rows[0].pass;
+    const isMatch = await bcrypt.compare(password, hashFromDb);
+    res.status(200).json({ exists: isMatch });
   } catch (error) {
-    console.error('passExist error:', error);
+    console.error('checkpass error:', error);
     res.status(500).json({ exists: false });
   }
 });
 
-async function checkPassword(password, hash) {
-    const isMatch = await bcrypt.compare(password, hash);
-    return isMatch;
-}
-
 app.get('/passExist', async (_req, res) => {
   try {
-    const result = await pool.query('SELECT 1 FROM password LIMIT 1');
+    const result = await pool.query('SELECT 1 FROM passwords LIMIT 1');
     res.status(200).json({ exists: result.rows.length > 0 });
   } catch (error) {
     console.error('passExist error:', error);
     res.status(500).json({ exists: false });
   }
 });
-
-async function checkPassword(password, hash) {
-    const isMatch = await bcrypt.compare(password, hash);
-    return isMatch;
-}
 
 app.post('/addData', async (req, res) => {
   const { table: tableName, data } = req.body || {};
@@ -188,9 +188,10 @@ app.post('/addData', async (req, res) => {
     }
 
     if (tableName === 'password') {
+      const hash = await hashPassword(data.newmdp);
       const result = await pool.query(
-        `INSERT INTO password (pass) VALUES ($1) RETURNING *`,
-        [data.newmdp]
+        `INSERT INTO passwords (pass) VALUES ($1) RETURNING *`,
+        [hash]
       );
       return res.status(201).json(result.rows[0]);
     }
